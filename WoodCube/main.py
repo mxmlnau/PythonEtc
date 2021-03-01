@@ -34,18 +34,18 @@ def rotate_x(l, times,  clockwise = True):
     clockwise_x_rotation = [[1, 0, 0], [0, 0, 1], [0, -1, 0]]
     anti_clockwise_x_rotation = [[1, 0, 0], [0, 0, -1], [0, 1, 0]]
     if clockwise:
-        return np.matmul(l, clockwise_x_rotation)
+        return np.matmul(l, clockwise_x_rotation).tolist()
     else:
-        return np.matmul(l, anti_clockwise_x_rotation)
+        return np.matmul(l, anti_clockwise_x_rotation).tolist()
 
 
 def rotate_y(l,  clockwise = True):
     clockwise_y_rotation = [[0,0,-1], [0, 1, 0], [1, 0, 0]]
     anti_clockwise_y_rotation = [[0,0,1], [0, 1, 0], [-1, 0, 0]]
     if clockwise:
-        return np.matmul(l, clockwise_y_rotation)
+        return np.matmul(l, clockwise_y_rotation).tolist()
     else:
-        return np.matmul(l, anti_clockwise_y_rotation)
+        return np.matmul(l, anti_clockwise_y_rotation).tolist()
 
 
 def rotate_z(l, clockwise = True):
@@ -53,9 +53,9 @@ def rotate_z(l, clockwise = True):
     anti_clockwise_z_rotation = [[0, -1, 0], [1, 0, 0], [0, 0, 1]]
 
     if clockwise:
-        return np.matmul(l, clockwise_z_rotation)
+        return np.matmul(l, clockwise_z_rotation).tolist()
     else:
-        return np.matmul(l, anti_clockwise_z_rotation)
+        return np.matmul(l, anti_clockwise_z_rotation).tolist()
 
 
 def plot_cuboids(list_in, n, fig):
@@ -95,35 +95,66 @@ def read_files():
     return out_list
 
 
-def check_grid(l):
-    grid_out = np.zeros([5,5,5])
+def get_grid (l):
+    grid_out = np.zeros([5, 5, 5])
     for p in l:
         for c in p:
             grid_out[c[0], c[1], c[2]] += 1
-    print(grid_out)
-    print((grid_out > 1).any())
+    return grid_out
 
 
-def all_combinations(l):
+def check_grid(l):
+    return not (get_grid(l) > 1).any()
+
+
+def check(list_in):
+    too_large = any(any(x > 4 for x in sublist) for sublist in list_in)
+    too_small = any(any(x < 0 for x in sublist) for sublist in list_in)
+    return(too_large or too_small)
+
+
+def all_combinations(l, number_of_pieces, i=0, good_pieces=[]):
+    good_pieces_c = good_pieces[:]
     k = 0
-    for p1
-    for rotation_x in range(5):
-        for rotation_y in range(5):
-            for rotation_z in range(5):
-                for translation_x in range(6):
-                    for translation_y in range(6):
-                        for translation_z in range(6):
-                            k += 1
-    print(k)
+    if not i >= number_of_pieces:
+        for rotation_x in range(5):
+            for rotation_y in range(5):
+                for rotation_z in range(5):
+                    for translation_x in range(5):
+                        for translation_y in range(5):
+                            for translation_z in range(5):
+                                piece = rotate_x(l[i], rotation_x)
+                                piece = rotate_y(piece, rotation_y)
+                                piece = rotate_z(piece, rotation_z)
+                                piece = translate_x(piece, translation_x)
+                                piece = translate_y(piece, translation_y)
+                                piece = translate_z(piece, translation_z)
+                                if not check(piece):
+                                    k += 1
 
+                                    good_pieces_c.append(piece)
+                                    all_combinations(l, number_of_pieces, i+1, good_pieces_c)
+                                    if i == number_of_pieces-1 and check_grid(good_pieces_c):
+                                        print("")
+                                        print("Last piece:", i)
+                                        print(good_pieces_c)
+                                        print("Number of good pieces:", len(good_pieces_c))
+                                        print(get_grid(good_pieces_c))
+                                        print(check_grid(good_pieces_c))
+                                        # plot_all(good_pieces_c)
+                                    del good_pieces_c[-1]
 
 
 def main():
-    all_combinations(2)
     pieces = read_files()
+    n = 2
+    pieces = pieces[:n]
+    all_combinations(pieces, n)
     check_grid(pieces)
     plt.show()
 
 
 # main()
-plot_all(read_files())
+# plot_all(read_files())
+
+print(check_grid([[[0,3,2]]]))
